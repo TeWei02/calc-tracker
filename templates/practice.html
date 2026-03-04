@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="mb-4">題目列表</h1>
+
+{% if problems %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>標題</th>
+      <th>章節</th>
+      <th>來源</th>
+      <th>難度</th>
+      <th>作答</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in problems %}
+    <tr>
+      <td>{{ p.title }}</td>
+      <td>{{ p.chapter }}</td>
+      <td>{{ p.source or "-" }}</td>
+      <td>{{ p.difficulty }}</td>
+      <td>
+        <form method="post" action="{{ url_for('add_attempt', problem_id=p.id) }}" class="d-inline">
+          <input type="hidden" name="spent_seconds" value="">
+          <button name="is_correct" value="true" class="btn btn-success btn-sm">答對</button>
+          <button name="is_correct" value="false" class="btn btn-danger btn-sm">答錯</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>目前沒有題目，先去新增幾題吧！</p>
+{% endif %}
+{% endblock %}
+
