@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="mb-4">統計圖表</h1>
+
+<div class="row mb-5">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header fw-bold">📊 各章節正確率（%）</div>
+      <div class="card-body">
+        <canvas id="chapterChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-5">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header fw-bold">📈 每週練習題數（近 8 週）</div>
+      <div class="card-body">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mb-4">
+  <a href="/export/csv" class="btn btn-success">
+    ⬇️ 匯出 CSV
+  </a>
+  <a href="/" class="btn btn-outline-secondary ms-2">← 返回首頁</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+async function renderCharts() {
+  // --- 各章節正確率長條圖 ---
+  const chapterRes = await fetch("/api/stats/chapter");
+  const chapterData = await chapterRes.json();
+
+  const chapterLabels = chapterData.map(d => d.chapter);
+  const chapterAccuracy = chapterData.map(d => d.accuracy);
+
+  new Chart(document.getElementById("chapterChart"), {
+    type: "bar",
+    data: {
+      labels: chapterLabels,
+      datasets: [{
+        label: "正確率 (%)",
+        data: chapterAccuracy,
+        backgroundColor: "rgba(54, 162, 235, 0.7)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 100, title: { display: true, text: "正確率 (%)" } },
+        x: { title: { display: true, text: "章節" } }
+      }
+    }
+  });
+
+  // --- 每週練習題數折線圖 ---
+  const weeklyRes = await fetch("/api/stats/weekly");
+  const weeklyData = await weeklyRes.json();
+
+  const weekLabels = weeklyData.map(d => d.week);
+  const weekCounts = weeklyData.map(d => d.count);
+
+  new Chart(document.getElementById("weeklyChart"), {
+    type: "line",
+    data: {
+      labels: weekLabels,
+      datasets: [{
+        label: "練習題數",
+        data: weekCounts,
+        fill: true,
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        pointBackgroundColor: "rgba(75, 192, 192, 1)",
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: "題數" } },
+        x: { title: { display: true, text: "週次" } }
+      }
+    }
+  });
+}
+
+renderCharts();
+</script>
+{% endblock %}
