@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="mb-4">章節練習統計</h1>
+
+{% if stats %}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>章節</th>
+      <th>作答次數</th>
+      <th>答對次數</th>
+      <th>正確率</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in stats %}
+    <tr>
+      <td>{{ row.chapter }}</td>
+      <td>{{ row.total_attempts }}</td>
+      <td>{{ row.correct_attempts }}</td>
+      <td>
+        {% if row.accuracy is not none %}
+        {{ row.accuracy }}%
+        {% else %}
+        -
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>目前還沒有練習紀錄，先去新增幾題吧！</p>
+{% endif %}
+{% endblock %}
+
