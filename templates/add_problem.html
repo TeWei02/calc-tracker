@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="mb-4">新增微積分題目</h1>
+
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">題目標題（簡短）</label>
+    <input type="text" name="title" class="form-control" required />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">題目描述／備註</label>
+    <textarea name="description" class="form-control" rows="4"></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">章節</label>
+    <select name="chapter" class="form-select" required>
+      <option value="極限">極限</option>
+      <option value="微分">微分</option>
+      <option value="積分">積分</option>
+      <option value="多變數微積分">多變數微積分</option>
+      <option value="其他">其他</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">來源（書名／考古題）</label>
+    <input type="text" name="source" class="form-control" />
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">難度（1=簡單, 3=困難）</label>
+    <select name="difficulty" class="form-select">
+      <option value="1">1 - 簡單</option>
+      <option value="2" selected>2 - 中等</option>
+      <option value="3">3 - 困難</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-primary">儲存</button>
+</form>
+{% endblock %}
+

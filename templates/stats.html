@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="mb-4">錯題統計（錯 2 次以上）</h1>
+
+{% if problems %}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>題目</th>
+      <th>章節</th>
+      <th>來源</th>
+      <th>錯題次數</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p, wrong_count in problems %}
+    <tr>
+      <td>{{ p.title }}</td>
+      <td>{{ p.chapter }}</td>
+      <td>{{ p.source or "-" }}</td>
+      <td>{{ wrong_count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>目前沒有錯兩次以上的題目，很棒！</p>
+{% endif %}
+{% endblock %}
+
