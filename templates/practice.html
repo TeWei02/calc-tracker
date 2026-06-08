@@ -16,7 +16,7 @@
   <tbody>
     {% for p in problems %}
     <tr>
-      <td>{{ p.title }}</td>
+      <td><a href="{{ url_for('problem_detail', problem_id=p.id) }}">{{ p.title }}</a></td>
       <td>{{ p.chapter }}</td>
       <td>{{ p.source or "-" }}</td>
       <td>{{ p.difficulty }}</td>
@@ -35,4 +35,3 @@
 <p>目前沒有題目，先去新增幾題吧！</p>
 {% endif %}
 {% endblock %}
-
