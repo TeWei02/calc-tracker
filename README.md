@@ -17,6 +17,7 @@
 | 錯題統計 | 自動整理錯兩次以上的題目，集中複習 |
 | 章節統計 | 顯示各章節作答次數與正確率，掌握弱項 |
 | 視覺化圖表 | 章節統計圖表 (Chart.js) |
+| AI 解題提示 | 題目詳細頁可呼叫 LLM 取得提示（不直接給完整答案） |
 
 ## 快速開始
 
@@ -25,6 +26,9 @@ git clone https://github.com/TeWei02/calc-tracker
 cd calc-tracker
 
 pip install -r requirements.txt
+
+# 選填：啟用 AI 提示功能
+export GROQ_API_KEY=your_groq_api_key
 
 # 初始化資料庫
 python db_init.py
