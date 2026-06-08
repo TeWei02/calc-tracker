@@ -180,10 +180,10 @@ def create_app():
     # ── C2: 匯出 CSV (/export/csv) ────────────────────────
     @app.route("/export/csv")
     def export_csv():
-        attempts = (
-            db.session.query(Attempt, Problem)
-            .join(Problem, Attempt.problem_id == Problem.id)
-            .order_by(Attempt.created_at.desc())
+        rows = (
+            db.session.query(Problem, Attempt)
+            .outerjoin(Attempt, Attempt.problem_id == Problem.id)
+            .order_by(Problem.created_at.desc(), Attempt.created_at.desc())
             .all()
         )
 
@@ -191,22 +191,34 @@ def create_app():
         writer = csv.writer(output)
 
         # Header
-        writer.writerow([
-            "題目ID", "題目標題", "章節", "難度", "來源",
-            "是否正確", "花費秒數", "作答時間"
-        ])
+        writer.writerow(["題目內容", "章節", "答題日期", "是否正確", "錯誤原因"])
 
-        for attempt, problem in attempts:
-            writer.writerow([
-                problem.id,
-                problem.title,
-                problem.chapter,
-                problem.difficulty,
-                problem.source or "",
-                "正確" if attempt.is_correct else "錯誤",
-                attempt.spent_seconds or "",
-                attempt.created_at.strftime("%Y-%m-%d %H:%M:%S") if attempt.created_at else "",
-            ])
+        for problem, attempt in rows:
+            problem_content = problem.title
+            if problem.description:
+                problem_content = f"{problem.title}\n{problem.description}"
+
+            answered_at = (
+                attempt.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if attempt and attempt.created_at
+                else ""
+            )
+            is_correct = (
+                "正確"
+                if attempt and attempt.is_correct
+                else ("錯誤" if attempt else "")
+            )
+            wrong_reason = "未提供" if attempt and not attempt.is_correct else ""
+
+            writer.writerow(
+                [
+                    problem_content,
+                    problem.chapter,
+                    answered_at,
+                    is_correct,
+                    wrong_reason,
+                ]
+            )
 
         # UTF-8 BOM 讓 Excel 正確顯示中文
         response_data = "\ufeff" + output.getvalue()
