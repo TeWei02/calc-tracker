@@ -82,6 +82,11 @@ def create_app():
             problems = Problem.query.order_by(Problem.created_at.desc()).all()
         return render_template("practice.html", problems=problems)
 
+    @app.route("/problems/<int:problem_id>")
+    def problem_detail(problem_id):
+        problem = Problem.query.get_or_404(problem_id)
+        return render_template("problem_detail.html", problem=problem)
+
     # ── 新增作答紀錄 ───────────────────────────────────────
     @app.route("/attempts/<int:problem_id>", methods=["POST"])
     def add_attempt(problem_id):
@@ -221,7 +226,11 @@ def create_app():
     # ── C3: AI 提示功能 (/ai/hint) ─────────────────────────
     @app.route("/ai/hint", methods=["POST"])
     def ai_hint():
-        problem_id = request.json.get("problem_id")
+        payload = request.get_json(silent=True) or {}
+        problem_id = payload.get("question_id") or payload.get("problem_id")
+        if not problem_id:
+            return jsonify({"error": "缺少 question_id"}), 400
+
         problem = Problem.query.get_or_404(problem_id)
 
         groq_api_key = os.environ.get("GROQ_API_KEY")

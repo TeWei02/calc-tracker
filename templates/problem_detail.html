@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="mb-3">{{ problem.title }}</h1>
+<ul class="list-group mb-3">
+  <li class="list-group-item"><strong>章節：</strong>{{ problem.chapter }}</li>
+  <li class="list-group-item"><strong>來源：</strong>{{ problem.source or "-" }}</li>
+  <li class="list-group-item"><strong>難度：</strong>{{ problem.difficulty }}</li>
+  <li class="list-group-item"><strong>描述：</strong>{{ problem.description or "（無額外描述）" }}</li>
+</ul>
+
+<button id="ai-hint-btn" class="btn btn-primary">獲取 AI 提示</button>
+<span id="ai-hint-loading" class="ms-2 text-muted d-none">載入中...</span>
+
+<div id="ai-hint-result" class="alert alert-info mt-3 d-none"></div>
+<div id="ai-hint-error" class="alert alert-danger mt-3 d-none"></div>
+
+<script>
+  const hintBtn = document.getElementById("ai-hint-btn");
+  const loadingEl = document.getElementById("ai-hint-loading");
+  const resultEl = document.getElementById("ai-hint-result");
+  const errorEl = document.getElementById("ai-hint-error");
+
+  hintBtn.addEventListener("click", async () => {
+    loadingEl.classList.remove("d-none");
+    hintBtn.disabled = true;
+    resultEl.classList.add("d-none");
+    errorEl.classList.add("d-none");
+
+    try {
+      const response = await fetch("/ai/hint", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question_id: {{ problem.id }} }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "無法取得提示");
+      }
+
+      resultEl.textContent = data.hint;
+      resultEl.classList.remove("d-none");
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.remove("d-none");
+    } finally {
+      loadingEl.classList.add("d-none");
+      hintBtn.disabled = false;
+    }
+  });
+</script>
+{% endblock %}
