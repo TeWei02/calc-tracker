@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calc Tracker ｜ 微積分練習與錯題管理</title>
+<meta name="description" content="微積分練習與錯題管理工具：建立題庫、記錄每次作答、自動整理錯題、章節正確率統計與 CSV 匯出。純前端、可離線使用。">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/svg+xml" href="./icons/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Calc Tracker">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Calc Tracker ｜ 微積分練習與錯題管理">
+<meta property="og:description" content="建立題庫、記錄作答、自動整理錯題與章節正確率統計。純前端、可離線使用。">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <div class="brand">
+      <span class="logo">∫</span>
+      <span>Calc Tracker
+        <small>微積分練習與錯題管理</small>
+      </span>
+    </div>
+    <div class="header-meta">
+      <div id="headerStats">—</div>
+      <div id="storageState"></div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="功能分頁">
+  <div class="wrap">
+    <button role="tab" data-view="overview" aria-selected="true">總覽</button>
+    <button role="tab" data-view="bank" aria-selected="false">題庫</button>
+    <button role="tab" data-view="practice" aria-selected="false">練習</button>
+    <button role="tab" data-view="mistakes" aria-selected="false">錯題</button>
+    <button role="tab" data-view="data" aria-selected="false">資料</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- ══════════ 總覽 ══════════ -->
+  <section class="view" id="view-overview" role="tabpanel">
+    <h1>學習總覽</h1>
+    <p class="sub">依章節統計作答次數與正確率，並追蹤近 8 週的練習量。</p>
+
+    <div class="grid kpi" id="kpiRow"></div>
+
+    <div class="card">
+      <h2>📊 各章節正確率</h2>
+      <div class="chart-holder"><canvas id="chapterChart" height="240"></canvas></div>
+      <div class="table-scroll" style="margin-top:14px">
+        <table id="chapterTable">
+          <thead>
+            <tr><th>章節</th><th>題目數</th><th>作答次數</th><th>答對次數</th><th>正確率</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="chapterEmpty" hidden>目前還沒有練習紀錄，先到「題庫」新增幾題，再開始練習吧。</p>
+    </div>
+
+    <div class="card">
+      <h2>📈 每週練習題數<span class="tag mute">近 8 週</span></h2>
+      <div class="chart-holder"><canvas id="weeklyChart" height="200"></canvas></div>
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>每週作答次數</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 題庫 ══════════ -->
+  <section class="view" id="view-bank" role="tabpanel" hidden>
+    <h1>題庫管理</h1>
+    <p class="sub">建立題目並標註章節、來源與難度，練習時即可快速記錄作答結果。</p>
+
+    <div class="card">
+      <h2>➕ 新增題目</h2>
+      <form id="problemForm">
+        <div class="grid form">
+          <div class="form-row">
+            <label class="field" for="pTitle">題目標題 *</label>
+            <input id="pTitle" required placeholder="例：∫ x·e^x dx">
+          </div>
+          <div class="form-row">
+            <label class="field" for="pChapter">章節 *</label>
+            <input id="pChapter" required list="chapterList" placeholder="例：分部積分">
+            <datalist id="chapterList"></datalist>
+          </div>
+          <div class="form-row">
+            <label class="field" for="pSource">來源</label>
+            <input id="pSource" placeholder="例：轉學考 111 台聯大">
+          </div>
+          <div class="form-row">
+            <label class="field" for="pDifficulty">難度（1–5）</label>
+            <select id="pDifficulty">
+              <option value="1">1 · 基礎</option>
+              <option value="2" selected>2 · 一般</option>
+              <option value="3">3 · 進階</option>
+              <option value="4">4 · 困難</option>
+              <option value="5">5 · 挑戰</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field" for="pDesc">備註 / 題目描述</label>
+          <textarea id="pDesc" placeholder="解題關鍵、易錯點、補充說明…"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="submit">新增題目</button>
+          <button class="btn plain" type="reset">清除</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>📚 題目清單 <span class="tag mute" id="bankCount">0 題</span></h2>
+      <div class="btn-row" style="margin-bottom:14px">
+        <label class="field" for="filterChapter" style="margin:0">章節篩選</label>
+        <select id="filterChapter" style="max-width:240px"><option value="">全部章節</option></select>
+        <input id="searchTitle" placeholder="搜尋標題關鍵字…" style="max-width:240px">
+      </div>
+      <div class="table-scroll">
+        <table id="problemTable">
+          <thead>
+            <tr><th>題目</th><th>章節</th><th>難度</th><th>來源</th><th>作答 / 正確率</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="bankEmpty" hidden>尚未建立任何題目。</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 練習 ══════════ -->
+  <section class="view" id="view-practice" role="tabpanel" hidden>
+    <h1>練習模式</h1>
+    <p class="sub">系統會記錄每題的作答結果與花費時間，作為錯題統計與正確率的依據。</p>
+
+    <div class="card" id="practiceIdle">
+      <h2>▶️ 開始練習</h2>
+      <p class="hint" style="margin-bottom:14px">選擇章節與出題方式，按「開始」後計時器會自動啟動。</p>
+      <div class="grid form">
+        <div class="form-row">
+          <label class="field" for="practiceChapter">章節範圍</label>
+          <select id="practiceChapter"><option value="">全部章節</option></select>
+        </div>
+        <div class="form-row">
+          <label class="field" for="practiceOrder">出題順序</label>
+          <select id="practiceOrder">
+            <option value="random">隨機</option>
+            <option value="weak">優先錯題</option>
+            <option value="hard">難度由高到低</option>
+            <option value="new">建立時間（新→舊）</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="startPractice">開始練習</button>
+        <button class="btn ghost" id="startTimer">僅啟動計時器</button>
+      </div>
+    </div>
+
+    <div class="card practice-box" id="practiceCard" hidden>
+      <div class="timer" id="timerDisplay">00:00</div>
+      <div class="meta" id="practiceMeta"></div>
+      <div class="q-title" id="qTitle"></div>
+      <div class="q-desc" id="qDesc"></div>
+      <div class="practice-actions">
+        <button class="btn ok" id="markCorrect">✓ 答對</button>
+        <button class="btn bad" id="markWrong">✗ 答錯</button>
+        <button class="btn plain" id="showHint">💡 提示</button>
+        <button class="btn plain" id="pauseTimer">⏸ 暫停</button>
+        <button class="btn ghost" id="stopPractice">結束練習</button>
+      </div>
+      <div class="note" id="hintBox" hidden style="margin-top:16px;text-align:left"></div>
+    </div>
+
+    <div class="card" id="practiceSummary" hidden>
+      <h2>✅ 本次練習</h2>
+      <div class="grid kpi" id="sessionKPI"></div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn" id="continuePractice">繼續練習</button>
+        <button class="btn plain" id="gotoMistakes">查看錯題</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 錯題 ══════════ -->
+  <section class="view" id="view-mistakes" role="tabpanel" hidden>
+    <h1>錯題統計</h1>
+    <p class="sub">自動整理答錯 2 次以上的題目，集中複習弱點。</p>
+    <div class="card">
+      <h2>🔁 需要加強的題目 <span class="tag bad" id="mistakeCount">0 題</span></h2>
+      <div class="table-scroll">
+        <table id="mistakeTable">
+          <thead>
+            <tr><th>題目</th><th>章節</th><th>答錯次數</th><th>作答次數</th><th>正確率</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="mistakeEmpty" hidden>目前沒有累積 2 次以上答錯的題目，繼續保持。</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 資料 ══════════ -->
+  <section class="view" id="view-data" role="tabpanel" hidden>
+    <h1>資料管理</h1>
+    <p class="sub">所有資料儲存在這台裝置的瀏覽器（localStorage），不會上傳到任何伺服器。</p>
+
+    <div class="card">
+      <h2>⬇️ 匯出</h2>
+      <div class="btn-row">
+        <button class="btn" id="exportCsv">匯出作答紀錄 CSV</button>
+        <button class="btn plain" id="exportJson">匯出完整備份 JSON</button>
+      </div>
+      <p class="hint" style="margin-top:12px">CSV 含 UTF-8 BOM，可直接用 Excel 開啟且中文不亂碼。</p>
+    </div>
+
+    <div class="card">
+      <h2>⬆️ 匯入</h2>
+      <div class="btn-row">
+        <input type="file" id="importJson" accept="application/json,.json" style="max-width:280px">
+        <select id="importMode" style="max-width:180px">
+          <option value="merge">合併（保留現有資料）</option>
+          <option value="replace">取代（清空後匯入）</option>
+        </select>
+      </div>
+      <p class="hint" style="margin-top:12px">僅接受由本工具匯出的 JSON 備份檔。</p>
+    </div>
+
+    <div class="card">
+      <h2>🧪 範例資料</h2>
+      <p class="hint" style="margin-bottom:12px">
+        載入 12 題微積分示範題目與對應作答紀錄，用來試看統計圖表與錯題功能。
+        <strong>這些是示範用的虛構資料，不是真實考試紀錄</strong>，可隨時清空。
+      </p>
+      <div class="btn-row">
+        <button class="btn plain" id="loadSample">載入示範資料</button>
+        <button class="btn danger" id="clearAll">清空所有資料</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>ℹ️ 關於這個版本</h2>
+      <div class="note">
+        <strong>靜態版：</strong>本頁是純前端版本（HTML / CSS / JavaScript），資料存於瀏覽器，
+        不需要伺服器即可運作，可安裝為 PWA 離線使用。<br>
+        <strong>完整版：</strong>專案同時保留 Flask + SQLite 後端（<code>app.py</code>），
+        支援跨裝置共享資料庫與 Groq API 的 AI 解題提示；後端程式碼請見 GitHub 專案根目錄。
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  Calc Tracker · 微積分練習與錯題管理 · MIT License
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="./app.js"></script>
+</body>
+</html>
