@@ -1,0 +1,25 @@
+# Calc Tracker — 一行指令自架
+#
+#   docker compose up -d        啟動（首次自動建置）
+#   docker compose logs -f      看日誌
+#   docker compose down         停止（資料留在 volume）
+#
+# 開 http://127.0.0.1:5000 即可使用。
+
+services:
+  app:
+    build: .
+    image: calc-tracker:latest
+    container_name: calc-tracker
+    ports:
+      - "5000:5000"
+    environment:
+      # SQLite 是單寫入者，維持單 worker 搭多執行緒最穩
+      WEB_CONCURRENCY: "1"
+      WEB_THREADS: "4"
+    volumes:
+      - calc-data:/app/instance
+    restart: unless-stopped
+
+volumes:
+  calc-data:
