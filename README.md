@@ -60,6 +60,19 @@ python app.py
 # 開啟 http://localhost:5000
 ```
 
+或用 Docker，一行指令、不必先裝 Python：
+
+```bash
+git clone https://github.com/TeWei02/calc-tracker
+cd calc-tracker
+docker compose up -d
+```
+
+開 <http://localhost:5000> 即可。容器啟動時會自動建立資料表，資料庫放在
+`calc-data` volume，`docker compose down` 不會清掉（要一起清空加 `-v`）。
+映像檔以 gunicorn 提供服務、非 root 執行，並附 `HEALTHCHECK`。
+SQLite 是單寫入者，預設維持 1 個 worker 搭 4 個執行緒，避免 `database is locked`。
+
 環境變數 `GROQ_API_KEY` 可啟用 AI 解題提示（`/ai/hint`），未設定時該功能回傳提示訊息，其餘功能不受影響。
 
 ## 技術棧
@@ -69,7 +82,7 @@ python app.py
 | 前端 | 原生 HTML / CSS / JavaScript（Canvas 圖表） | HTML / Bootstrap 5 / Jinja2 |
 | 後端 | — | Python, Flask |
 | 資料庫 | 瀏覽器 localStorage | SQLite (Flask-SQLAlchemy) |
-| 部署 | GitHub Pages（`docs/` 目錄） | 任意支援 Python 的主機 |
+| 部署 | GitHub Pages（`docs/` 目錄） | 任意支援 Python 的主機，或 `docker compose up -d` |
 
 ## 專案結構
 
@@ -79,6 +92,9 @@ calc-tracker/
 ├── models.py               # SQLAlchemy 資料模型
 ├── db_init.py              # 資料庫初始化
 ├── requirements.txt
+├── Dockerfile              # 單一映像檔自架（gunicorn、非 root、HEALTHCHECK）
+├── docker-compose.yml      # 一行指令啟動，資料庫存 calc-data volume
+├── docker-entrypoint.sh    # 啟動前建立資料表，再交給 gunicorn
 ├── templates/              # Jinja2 模板（完整版）
 ├── static/                 # 完整版靜態資源
 └── docs/                   # 靜態版（GitHub Pages 來源）
