@@ -3,9 +3,10 @@ import io
 import os
 from datetime import datetime, timedelta
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
-from models import db, Problem, Attempt
-from sqlalchemy import func, case
+from flask import Flask, Response, jsonify, redirect, render_template, request, url_for
+from sqlalchemy import case, func
+
+from models import Attempt, Problem, db
 
 
 def create_app():
@@ -22,7 +23,7 @@ def create_app():
             db.session.query(
                 Problem.chapter,
                 func.count(Attempt.id),
-                func.sum(case((Attempt.is_correct == True, 1), else_=0)),
+                func.sum(case((Attempt.is_correct, 1), else_=0)),
             )
             .join(Attempt, Attempt.problem_id == Problem.id, isouter=True)
             .group_by(Problem.chapter)
@@ -104,14 +105,14 @@ def create_app():
         wrong_counts = (
             db.session.query(
                 Attempt.problem_id,
-                func.sum(case((Attempt.is_correct == False, 1), else_=0)).label(
+                func.sum(case((not Attempt.is_correct, 1), else_=0)).label(
                     "wrong_count"
                 ),
             )
             .group_by(Attempt.problem_id)
             .having(
                 func.sum(
-                    case((Attempt.is_correct == False, 1), else_=0)
+                    case((not Attempt.is_correct, 1), else_=0)
                 ) >= 2
             )
             .subquery()
@@ -137,7 +138,7 @@ def create_app():
             db.session.query(
                 Problem.chapter,
                 func.count(Attempt.id).label("total"),
-                func.sum(case((Attempt.is_correct == True, 1), else_=0)).label("correct"),
+                func.sum(case((Attempt.is_correct, 1), else_=0)).label("correct"),
             )
             .join(Attempt, Attempt.problem_id == Problem.id, isouter=True)
             .group_by(Problem.chapter)
