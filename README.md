@@ -1,5 +1,7 @@
 # Calc Tracker — 微積分練習與錯題管理系統
 
+**Language:** [![中文](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-%E4%B8%AD%E6%96%87%E7%89%88-blue?style=flat-square)](README.md) [![English](https://img.shields.io/badge/English-English-blue?style=flat-square)](README.en.md)
+
 [![Live](https://img.shields.io/badge/Live-tewei02.github.io%2Fcalc--tracker-2ea043?logo=github)](https://tewei02.github.io/calc-tracker/)
 [![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8)](https://web.dev/progressive-web-apps/)
 [![Python](https://img.shields.io/badge/Python-3-%233776AB?logo=python)](https://www.python.org/)
